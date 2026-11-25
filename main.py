@@ -21,17 +21,27 @@ Calibration history:
   v3: micro-variants of the overthink line (em-dash join, "whether she's right" coda)
       scored equal or worse on economy; plain two-sentence deadpan delivery kept.
   v4: final line locked as v2d/v3a; verified byte-identical across 3 runs.
+  v5: added a --check mode that prints the gate verdict (length, single line)
+      without writing, so the entry can be verified without touching /output.
 """
 
 import os
+import sys
 
 JOKE = "My therapist says I overthink everything. I've been thinking about that for three weeks."
 
 
+def gate_ok(text: str) -> bool:
+    """The sealed gate: UTF-8 text of 1 to 280 characters, not only whitespace."""
+    return 1 <= len(text) <= 280 and text.strip() != "" and "\n" not in text
+
+
 def main() -> None:
     text = JOKE
-    assert 1 <= len(text) <= 280, f"entry length {len(text)} out of gate range"
-    assert "\n" not in text, "entry must be a single line"
+    assert gate_ok(text), f"entry fails gate: {len(text)} chars"
+    if "--check" in sys.argv:
+        print(f"gate: OK, {len(text)} chars, 1 line")
+        return
     out_dir = os.environ.get("OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "entry.txt")
